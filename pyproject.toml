@@ -1,0 +1,29 @@
+[tool.poetry]
+name = "book_shop_drf_p23"
+version = "0.1.0"
+description = ""
+authors = ["ixlos23 <izzatmatkarimov090@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+django = "^5.1.2"
+djangorestframework = "^3.15.2"
+django-filter = "^24.3"
+django-mptt = "^0.16.0"
+drf-spectacular = "^0.27.2"
+pillow = "^10.4.0"
+jwt = "^1.3.1"
+djangorestframework-simplejwt = "^5.3.1"
+celery = {extras = ["redis"], version = "^5.4.0"}
+django-celery-results = "^2.5.1"
+redis = "^5.1.1"
+rediscache = "^1.0.0"
+django-ckeditor-5 = "^0.2.14"
+flake8 = "^7.1.1"
+django-redis = "^5.4.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
