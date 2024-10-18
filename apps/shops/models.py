@@ -51,49 +51,49 @@ class Review(TimeBasedModel):
         return self.stars / 2
 
 
-class Country(Model):
-    name = CharField(max_length=255)
-
-    def __str__(self):
-        return self.name
-
-
-class Address(TimeBasedModel):
-    first_name = CharField(max_length=255)
-    last_name = CharField(max_length=255)
-    address_line_1 = CharField(max_length=255)
-    address_line_2 = CharField(max_length=255, null=True, blank=True)
-    city = CharField(max_length=255)
-    state = CharField(max_length=255, null=True, blank=True)
-    postal_code = PositiveIntegerField(db_default=0, null=True, blank=True)
-    phone_number = CharField(max_length=16)
-    shipping_address = BooleanField(db_default=False)
-    billing_address = BooleanField(db_default=True)
-    country = ForeignKey('shops.Country', CASCADE)
-    user = ForeignKey('users.User', RESTRICT)
-
-    def __str__(self):
-        return f"{self.first_name} - {self.last_name}"
-
-'''
-First Name
-Last Name
-Country
-Address
-Line 1
-Line 2 (optional)
-City
-State/Province
-Postal Code
-Phone
-
-'''
-
-class Cart(TimeBasedModel):
-    book = ForeignKey('shops.Book', CASCADE)
-    owner = ForeignKey('users.User', CASCADE)
-    quantity = PositiveIntegerField(db_default=1)
+# class Country(Model):
+#     name = CharField(max_length=255)
+#
+#     def __str__(self):
+#         return self.name
 
 
-    def __str__(self):
-        return f"{self.owner} - {self.book}"
+# class Address(TimeBasedModel):
+#     first_name = CharField(max_length=255)
+#     last_name = CharField(max_length=255)
+#     address_line_1 = CharField(max_length=255)
+#     address_line_2 = CharField(max_length=255, null=True, blank=True)
+#     city = CharField(max_length=255)
+#     state = CharField(max_length=255, null=True, blank=True)
+#     postal_code = PositiveIntegerField(db_default=0, null=True, blank=True)
+#     phone_number = CharField(max_length=16)
+#     shipping_address = BooleanField(db_default=False)
+#     billing_address = BooleanField(db_default=True)
+#     country = ForeignKey('shops.Country', CASCADE)
+#     user = ForeignKey('users.User', RESTRICT)
+#
+#     def __str__(self):
+#         return f"{self.first_name} - {self.last_name}"
+#
+# '''
+# First Name
+# Last Name
+# Country
+# Address
+# Line 1
+# Line 2 (optional)
+# City
+# State/Province
+# Postal Code
+# Phone
+#
+# '''
+#
+# class Cart(TimeBasedModel):
+#     book = ForeignKey('shops.Book', CASCADE)
+#     owner = ForeignKey('users.User', CASCADE)
+#     quantity = PositiveIntegerField(db_default=1)
+#
+#
+#     def __str__(self):
+#         return f"{self.owner} - {self.book}"

@@ -13,6 +13,15 @@ Homework
 5. wishlist apilari 🆗
 
 
+task
+1. address qoshish va listini olish apisi 🆗
+2. edit va ochirish 1tadan kop bolsa 🆗
+3. ochirishda default turganlarni ochira olmasligi
+4. listini chiqarishda 1chi defaultlar chiqish keyin name ni alfabit boyicha 🆗
+5. default billing no delete, no edit 🆗
+6. default shipping no delete
+
+
 
 git init
 git add .

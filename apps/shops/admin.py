@@ -1,6 +1,7 @@
 from django.contrib import admin
 
-from shops.models import Book, Address
+from shops.models import Book
+from users.models import Address
 
 
 @admin.register(Book)
