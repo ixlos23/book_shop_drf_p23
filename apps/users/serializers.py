@@ -2,16 +2,67 @@ from django.contrib.auth import authenticate
 from django.contrib.auth.hashers import make_password
 from rest_framework.exceptions import ValidationError
 from rest_framework.fields import HiddenField, CurrentUserDefault, CharField, EmailField, IntegerField, BooleanField
-from rest_framework.serializers import ModelSerializer, Serializer
+from rest_framework.serializers import Serializer, ModelSerializer
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
-from users.models import User, Address, Country
+from users.models import User, Address, Country, Author, LoginAttempt
+
+
+class AuthorListModelSerializer(ModelSerializer):
+    class Meta:
+        model = Author
+        exclude = 'description',
+
+
+class AuthorDetailModelSerializer(ModelSerializer):
+    class Meta:
+        model = Author
+        exclude = ()
 
 
 class CountryModelSerializer(ModelSerializer):
     class Meta:
         model = Country
         exclude = ()
+
+
+class AddressListModelSerializer(ModelSerializer):
+    user = HiddenField(default=CurrentUserDefault())
+    postal_code = IntegerField(default=123400, min_value=0)
+    has_shipping_address = BooleanField(write_only=True)
+    has_billing_address = BooleanField(write_only=True)
+
+    class Meta:
+        model = Address
+        exclude = ()
+
+    def create(self, validated_data):
+        _has_billing_address = validated_data.pop('has_billing_address')
+        _has_shipping_address = validated_data.pop('has_shipping_address')
+
+        _address = super().create(validated_data)
+        _user: User = _address.user
+        if _user.address_set.count() < 2:
+            _user.billing_address = _address
+            _user.shipping_address = _address
+            _user.save()
+
+        if _has_billing_address:
+            _user.billing_address = _address
+            _user.save()
+
+        if _has_shipping_address:
+            _user.shipping_address = _address
+            _user.save()
+
+        return _address
+
+    def to_representation(self, instance):
+        repr = super().to_representation(instance)
+        repr['country'] = CountryModelSerializer(instance.country).data
+        repr['has_billing_address'] = instance.user.billing_address_id == instance.id
+        repr['has_shipping_address'] = instance.user.shipping_address_id == instance.id
+        return repr
 
 
 class UserModelSerializer(ModelSerializer):
@@ -60,7 +111,7 @@ class RegisterUserModelSerializer(ModelSerializer):
 
     class Meta:
         model = User
-        fields = 'id', 'email', 'password', 'confirm_password', 'first_name',
+        fields = 'id', 'email', 'password', 'confirm_password', 'name',
 
         extra_kwargs = {
             'password': {'write_only': True}
@@ -81,9 +132,23 @@ class LoginUserModelSerializer(Serializer):
     def validate(self, attrs):
         email = attrs.get('email')
         password = attrs.get('password')
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            raise ValidationError("Invalid email or password")
+        login_attempt, created = LoginAttempt.objects.get_or_create(user=user)
+        if login_attempt.is_blocked():
+            raise ValidationError("Foydalanuvchi 5 daqiqa bloklangan!")
         user = authenticate(username=email, password=password)
         if user is None:
+            login_attempt.increment_attempts()
+
+            if login_attempt.attempts >= 3:
+                login_attempt.block_for_five_minutes()
+                raise ValidationError("Siz 3 marta noto'g'ri kiritdingiz. 5 daqiqaga bloklandingiz!")
+
             raise ValidationError("Invalid email or password")
+        login_attempt.reset_attempts()
         attrs['user'] = user
         return attrs
 
@@ -94,37 +159,3 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         token = super().get_token(user)
         token['email'] = user.email
         return token
-
-
-class AddressListModelSerializer(ModelSerializer):
-    user = HiddenField(default=CurrentUserDefault())
-    postal_code = IntegerField(default=123400, min_value=0)
-    has_shipping_address = BooleanField(write_only=True)
-    has_billing_address = BooleanField(write_only=True)
-
-    class Meta:
-        model = Address
-        exclude = ()
-
-    def create(self, validated_data):
-        _has_billing_address = validated_data.pop('has_billing_address')
-        _has_shipping_address = validated_data.pop('has_shipping_address')
-
-        _address = super().create(validated_data)
-        _user: User = _address.user
-        if _has_billing_address:
-            _user.billing_address = _address
-            _user.save()
-
-        if _has_shipping_address:
-            _user.shipping_address = _address
-            _user.save()
-
-        return _address
-
-    def to_representation(self, instance):
-        repr = super().to_representation(instance)
-        repr['country'] = CountryModelSerializer(instance.country).data
-        repr['has_billing_address'] = instance.user.billing_address_id == instance.id
-        repr['has_shipping_address'] = instance.user.shipping_address_id == instance.id
-        return repr

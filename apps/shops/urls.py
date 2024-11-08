@@ -1,12 +1,9 @@
-from django.urls import path, include
-from rest_framework.routers import DefaultRouter
+from django.urls import path
 
-from users.views import AddressListCreateAPIView, AddressDestroyUpdateAPIView
-
-router = DefaultRouter()
+from shops.views import BookListAPIView, CountryListAPIView, BookDetailAPIView
 
 urlpatterns = [
-    # path('', include(router.urls)),
-
-    # path('country', CountryListAPIView.as_view()),
+    path('country', CountryListAPIView.as_view()),
+    path('books', BookListAPIView.as_view(), name='book-list'),
+    path('books/<str:slug>', BookDetailAPIView.as_view(), name='book-detail'),
 ]

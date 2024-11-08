@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     'mptt',
 
 ]
+AUTH_USER_MODEL='users.User'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -61,7 +62,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'root.wsgi.application'
-AUTH_USER_MODEL = 'users.User'
+
 
 DATABASES = {
     'default': {

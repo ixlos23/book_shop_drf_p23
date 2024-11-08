@@ -1,9 +1,12 @@
+from datetime import timedelta
+
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.models import AbstractUser
-from django.db.models import Model, OneToOneField
 from django.db.models import Model, EmailField, CharField, CASCADE, TextField, Model, ForeignKey, PositiveIntegerField, \
-    RESTRICT, ManyToManyField, BooleanField
+    RESTRICT, ManyToManyField, BooleanField, DateTimeField, IntegerField
+from django.db.models import Model, OneToOneField
+from django.utils import timezone
 from mptt.models import MPTTModel
 
 from shared.models import TimeBasedModel
@@ -44,7 +47,7 @@ class Address(TimeBasedModel):
     state = CharField(max_length=255, null=True, blank=True)
     postal_code = PositiveIntegerField(db_default=0, null=True, blank=True)
     phone_number = CharField(max_length=16)  # todo + siz saqlash kerak
-    country = ForeignKey('users.Country', CASCADE)
+    country = ForeignKey('users.Country', CASCADE, null=False, related_name='addresses')
     user = ForeignKey('users.User', RESTRICT)
 
     # def clean(self):
@@ -61,12 +64,6 @@ class Cart(TimeBasedModel):
     book = ForeignKey('shops.Book', CASCADE)
     owner = ForeignKey('users.User', CASCADE)
     quantity = PositiveIntegerField(db_default=1)
-    '''
-    format
-    condition
-    seller
-    ship from
-    '''
 
     def __str__(self):
         return f"{self.owner} - {self.book}"
@@ -77,3 +74,28 @@ class Country(Model):
 
     def __str__(self):
         return self.name
+
+
+class LoginAttempt(Model):
+    user = OneToOneField('users.User', CASCADE)
+    attempts = IntegerField(default=0)
+    last_attempt_time = DateTimeField(null=True, blank=True)
+    blocked_until = DateTimeField(null=True, blank=True)
+
+    def block_for_five_minutes(self):
+        self.blocked_until = timezone.now() + timedelta(minutes=5)
+        self.save()
+
+    def reset_attempts(self):
+        self.attempts = 0
+        self.save()
+
+    def increment_attempts(self):
+        self.attempts += 1
+        self.last_attempt_time = timezone.now()
+        self.save()
+
+    def is_blocked(self):
+        if self.blocked_until and self.blocked_until > timezone.now():
+            return True
+        return False

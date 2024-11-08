@@ -1,40 +1,38 @@
 from drf_spectacular.utils import extend_schema
-from rest_framework.generics import ListCreateAPIView, ListAPIView, UpdateAPIView, DestroyAPIView
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.generics import ListAPIView, RetrieveAPIView
+
+from shared.pagination import CustomPageNumberPagination
+from shops.models import Book
+from shops.serializer import BookDetailModelSerializer, BookListModelSerializer
+from users.models import Country
+from users.serializers import CountryModelSerializer
 
 
-from users.serializers import AddressListModelSerializer
+@extend_schema(tags=['users'])
+class CountryListAPIView(ListAPIView):
+    queryset = Country.objects.all()
+    serializer_class = CountryModelSerializer
+    authentication_classes = ()
+    pagination_class = CustomPageNumberPagination
 
 
-# @extend_schema(tags=['users'])
-# class AddressListCreateAPIView(ListCreateAPIView):
-#     queryset = Address.objects.all()
-#     serializer_class = AddressListModelSerializer
-#     permission_classes = IsAuthenticated,
-#
-#     def get_queryset(self):
-#         return super().get_queryset().filter(user=self.request.user)
-#
-#
-# @extend_schema(tags=['users'])
-# class CountryListAPIView(ListAPIView):
-#     queryset = Country.objects.all()
-#     serializer_class = CountryModelSerializer
-#     authentication_classes = ()
+@extend_schema(tags=['shops'])
+class BookListAPIView(ListAPIView):
+    queryset = Book.objects.order_by('-id')
+    serializer_class = BookListModelSerializer  # BookDetailModelSerializer
+    pagination_class = CustomPageNumberPagination
+
+    def get_serializer_context(self):
+        currency = self.request.user.profile.currency if self.request.user.is_authenticated else 'USD'
+        return {'currency': currency}
 
 
-# @extend_schema(tags=['users'])
-# class AddressBookRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
-#     queryset = Address.objects.all()
-#     serializer_class = AddressModelSerializer
+@extend_schema(tags=['shops'])
+class BookDetailAPIView(RetrieveAPIView):
+    queryset = Book.objects.all()
+    serializer_class = BookDetailModelSerializer
+    lookup_field = 'slug'
 
-# @extend_schema(tags=['users'])
-# class AddressBookUpdateAPIView(UpdateAPIView):
-#     queryset = Address.objects.all()
-#     serializer_class = AddressModelSerializer
-#
-#
-# @extend_schema(tags=['users'])
-# class AddressBookDeleteAPIView(DestroyAPIView):
-#     queryset = Address.objects.all()
-#     serializer_class = AddressModelSerializer
+    def get_serializer_context(self):
+        currency = self.request.user.profile.currency if self.request.user.is_authenticated else 'USD'
+        return {'currency': currency}
